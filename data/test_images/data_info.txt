@@ -1,0 +1,3 @@
+Download the dataset from the link below:
+
+https://www.kaggle.com/competitions/rsna-2022-cervical-spine-fracture-detection/data
