@@ -1,10 +1,14 @@
 import os
 import torch
+import glob
+import re
 import pandas as pd
 import numpy as np
 import pydicom as dicom
 import cv2
 from torch.utils.data import Dataset
+
+
 
 class DataSet(torch.utils.data.Dataset):    
     def __init__(self, df, path, transforms=None):
@@ -53,8 +57,8 @@ def load_dicom(path):
 
     
 
-def load_df_test():
-    df_test = pd.read_csv(f'{RSNA_2022_PATH}/test.csv')
+def load_df_test(path):
+    df_test = pd.read_csv(f'{path}/test.csv')
 
     if df_test.iloc[0].row_id == '1.2.826.0.1.3680043.10197_C1':
         # test_images and test.csv are inconsistent in the dev dataset, fixing labels for the dev run.
@@ -64,4 +68,31 @@ def load_df_test():
             "prediction_type": ["C1", "C1", "patient_overall"]}
         )
     return df_test
+
     
+def load_test_slices(path):
+    """
+    Loads and processes test slices from the given directory.
+
+    Parameters:
+        path (str): Path to the directory containing test images.
+
+    Returns:
+        pd.DataFrame: A DataFrame with 'StudyInstanceUID' and 'Slice' columns,
+                      sorted by 'StudyInstanceUID' and 'Slice'.
+    """
+    # Find all test slices in the directory
+    test_slices = glob.glob(f'{path}/*/*')
+    
+    # Extract StudyInstanceUID and Slice from file paths
+    test_slices = [re.findall(f'{path}/(.*)/(.*).dcm', s)[0] for s in test_slices]
+    
+    # Create a DataFrame and sort the data
+    df_test_slices = (
+        pd.DataFrame(data=test_slices, columns=['StudyInstanceUID', 'Slice'])
+        .astype({'Slice': int})
+        .sort_values(['StudyInstanceUID', 'Slice'])
+        .reset_index(drop=True)
+    )
+    
+    return df_test_slices
