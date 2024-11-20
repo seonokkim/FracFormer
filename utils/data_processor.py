@@ -42,18 +42,26 @@ class DataSet(torch.utils.data.Dataset):
 
 def load_dicom(path):
     """
-    This supports loading both regular and compressed JPEG images. 
-    See the first sell with `pip install` commands for the necessary dependencies
+    Load and preprocess a DICOM file.
+    Converts to RGB format if the image is grayscale.
     """
-    img=dicom.dcmread(path)
-    img.PhotometricInterpretation = 'YBR_FULL'
-    data = img.pixel_array    
+    # Read the DICOM file
+    img = dicom.dcmread(path)
+    
+    # Access pixel data
+    data = img.pixel_array
+
+    # Normalize pixel data to range [0, 255]
     data = data - np.min(data)
     if np.max(data) != 0:
         data = data / np.max(data)
-    data=(data * 255).astype(np.uint8)
-    return cv2.cvtColor(data, cv2.COLOR_GRAY2RGB), img
+    data = (data * 255).astype(np.uint8)  # Convert to uint8 for compatibility
 
+    # Convert to RGB format
+    if len(data.shape) == 2:  # If the image is grayscale
+        data = cv2.cvtColor(data, cv2.COLOR_GRAY2RGB)
+    
+    return data, img
 
     
 
