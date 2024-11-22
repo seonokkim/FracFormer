@@ -52,35 +52,47 @@ def clean_up_folders():
 
 def split_train_test(train_csv_path, train_images_path, test_images_path, test_csv_path):
     """
-    Split the `train_images` into 80% training and 20% testing.
-    Move the 20% test folders to the `test_images` directory and create a new `test.csv`.
-    """
-    # Read the train.csv file
-    train_df = pd.read_csv(train_csv_path)
+    Splits the `train_images` into 80% training and 20% testing.
+    Moves the 20% test folders to the `test_images` directory and creates a new `test.csv`.
 
+    Parameters:
+    - train_csv_path: Path to the `train.csv` file.
+    - train_images_path: Path to the directory containing training images (organized by StudyInstanceUID folders).
+    - test_images_path: Path to the directory where test images will be moved.
+    - test_csv_path: Path to save the newly created `test.csv`.
+    """
     # List all StudyInstanceUID folders in train_images
     study_folders = os.listdir(train_images_path)
     if not study_folders:
         raise ValueError("No folders found in train_images.")
 
-    # Randomly select 20% of the folders for testing
-    random.shuffle(study_folders)
-    test_study_folders = study_folders[: int(0.2 * len(study_folders))]
-    train_study_folders = study_folders[int(0.2 * len(study_folders)) :]
+    train_images_num = len(study_folders)  # Total number of folders in train_images
+    print(f"Folders in train_images: {train_images_num}, {int(train_images_num * 0.2)} folders will be moved to test_images.")
 
-    # Remove folders not in train_study_folders
-    for folder in study_folders:
-        if folder not in train_study_folders:
-            shutil.rmtree(os.path.join(train_images_path, folder))
+    # Shuffle and split folders into 80% train and 20% test
+    random.shuffle(study_folders)  # Randomly shuffle the list of folders
+    split_index = int(0.2 * train_images_num)
+    test_study_folders = study_folders[:split_index]  # 20% for test
+    train_study_folders = study_folders[split_index:]  # Remaining 80% for training
 
-    # Move test_study_folders to test_images
+    # Move test_study_folders to test_images directory
     os.makedirs(test_images_path, exist_ok=True)
     for folder in test_study_folders:
         shutil.move(os.path.join(train_images_path, folder), os.path.join(test_images_path, folder))
+    print(f"Moved {len(test_study_folders)} folders to {test_images_path}.")
 
-    # Create test.csv based on the test StudyInstanceUIDs
+    # Read the train.csv file
+    train_df = pd.read_csv(train_csv_path)
+
+    # Filter train.csv to keep only training StudyInstanceUIDs
+    train_df_filtered = train_df[train_df["StudyInstanceUID"].isin(train_study_folders)]
+    train_df_filtered.to_csv(train_csv_path, index=False)  # Overwrite train.csv with filtered data
+    print(f"Updated {train_csv_path} with {len(train_df_filtered)} training records.")
+
+    # Create test.csv with test StudyInstanceUIDs
     test_df = train_df[train_df["StudyInstanceUID"].isin(test_study_folders)]
     test_df.to_csv(test_csv_path, index=False)
+    print(f"Created {test_csv_path} with {len(test_df)} test records.")
 
     print(f"Train-Test split completed: {len(train_study_folders)} train, {len(test_study_folders)} test.")
 
