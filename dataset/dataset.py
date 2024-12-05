@@ -50,49 +50,80 @@ def clean_up_folders():
     print("Unnecessary files and folders removed.")
 
 
+def melt_dataframe(df):
+    """
+    Melts the given DataFrame into the desired format for submission.
+    Each column (C1 to C7) is transformed into rows with a corresponding prediction type and fracture target.
+    """
+    # Melt the DataFrame: transform columns (C1 to C7) into rows
+    melted_df = df.melt(
+        id_vars=["StudyInstanceUID", "patient_overall"],  # Keep these columns as is
+        value_vars=["C1", "C2", "C3", "C4", "C5", "C6", "C7"],  # Columns to unpivot
+        var_name="prediction_type",  # Name of the new column for C1-C7
+        value_name="fracture_target"  # Name of the new column for target values
+    )
+    # Create the row_id column by combining StudyInstanceUID and prediction_type
+    melted_df["row_id"] = melted_df["StudyInstanceUID"] + "_" + melted_df["prediction_type"]
+    # Add an empty column for predictions
+    melted_df["fracture_prediction"] = ""
+    # Rearrange columns for the desired output format
+    melted_df = melted_df[
+        ["row_id", "StudyInstanceUID", "prediction_type", "fracture_prediction", "fracture_target"]
+    ]
+    return melted_df
+
+
 def split_train_test(train_csv_path, train_images_path, test_images_path, test_csv_path):
     """
-    Splits the `train_images` into 80% training and 20% testing.
-    Moves the 20% test folders to the `test_images` directory and creates a new `test.csv`.
+    Splits the `train_images` folder into 80% training and 20% testing.
+    Moves the testing folders to `test_images` and creates a new `test.csv` in the desired melted format.
 
     Parameters:
-    - train_csv_path: Path to the `train.csv` file.
-    - train_images_path: Path to the directory containing training images (organized by StudyInstanceUID folders).
+    - train_csv_path: Path to the training CSV file.
+    - train_images_path: Path to the directory containing training images (folders per StudyInstanceUID).
     - test_images_path: Path to the directory where test images will be moved.
-    - test_csv_path: Path to save the newly created `test.csv`.
+    - test_csv_path: Path to save the newly created test CSV file.
     """
-    # List all StudyInstanceUID folders in train_images
+    # Get the list of StudyInstanceUID folders in the training images directory
     study_folders = os.listdir(train_images_path)
     if not study_folders:
         raise ValueError("No folders found in train_images.")
 
-    train_images_num = len(study_folders)  # Total number of folders in train_images
+    # Total number of folders in train_images
+    train_images_num = len(study_folders)
     print(f"Folders in train_images: {train_images_num}, {int(train_images_num * 0.2)} folders will be moved to test_images.")
 
-    # Shuffle and split folders into 80% train and 20% test
-    random.shuffle(study_folders)  # Randomly shuffle the list of folders
+    # Shuffle the list of folders to randomize train-test split
+    random.shuffle(study_folders)
+    # Calculate the split index for 20% testing
     split_index = int(0.2 * train_images_num)
+    # Divide folders into test and train sets
     test_study_folders = study_folders[:split_index]  # 20% for test
     train_study_folders = study_folders[split_index:]  # Remaining 80% for training
 
-    # Move test_study_folders to test_images directory
+    # Create the test_images directory if it doesn't exist
     os.makedirs(test_images_path, exist_ok=True)
+    # Move test folders to the test_images directory
     for folder in test_study_folders:
         shutil.move(os.path.join(train_images_path, folder), os.path.join(test_images_path, folder))
     print(f"Moved {len(test_study_folders)} folders to {test_images_path}.")
 
-    # Read the train.csv file
+    # Read the train.csv file into a DataFrame
     train_df = pd.read_csv(train_csv_path)
 
-    # Filter train.csv to keep only training StudyInstanceUIDs
+    # Filter the DataFrame to keep only training records
     train_df_filtered = train_df[train_df["StudyInstanceUID"].isin(train_study_folders)]
-    train_df_filtered.to_csv(train_csv_path, index=False)  # Overwrite train.csv with filtered data
+    # Save the updated training DataFrame back to train.csv
+    train_df_filtered.to_csv(train_csv_path, index=False)
     print(f"Updated {train_csv_path} with {len(train_df_filtered)} training records.")
 
-    # Create test.csv with test StudyInstanceUIDs
+    # Filter the DataFrame to create a test DataFrame
     test_df = train_df[train_df["StudyInstanceUID"].isin(test_study_folders)]
-    test_df.to_csv(test_csv_path, index=False)
-    print(f"Created {test_csv_path} with {len(test_df)} test records.")
+    # Transform the test DataFrame to the desired melted format
+    melted_test_df = melt_dataframe(test_df)
+    # Save the melted test DataFrame to test.csv
+    melted_test_df.to_csv(test_csv_path, index=False)
+    print(f"Created {test_csv_path} with {len(melted_test_df)} records in the desired format.")
 
     print(f"Train-Test split completed: {len(train_study_folders)} train, {len(test_study_folders)} test.")
 
