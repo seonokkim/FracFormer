@@ -32,7 +32,7 @@ The architecture consists of:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/<username>/FracFormer.git
+   git clone https://github.com/seonokkim/FracFormer.git
    cd FracFormer
    ```
 
