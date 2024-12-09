@@ -110,19 +110,8 @@ This step:
 
 ---
 
-## Figures
-
-### Vertebrae Network
-- Patch partition of input images:
-<p align="center">
-  <img src="figures/figure_7_Patch partition of Vertebrae Network.png" width="600">
-</p>
-
-### Fracture Network
-- Shifted-window mechanism of Swin Transformers:
-<p align="center">
-  <img src="figures/figure_10_Shifted-window mechanism of Fracture Network.png" width="700">
-</p>
+## License
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ---
 
