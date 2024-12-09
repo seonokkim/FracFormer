@@ -1,28 +1,134 @@
 # FracFormer: Semi-supervised Learning for Vertebrae and Fracture Classification on 3D Radiographs with Transformers
+
 This repository is the official implementation of FracFormer: Semi-supervised Learning for Vertebrae and Fracture Classification on 3D Radiographs with Transformers. Our framework applies transformer-based models to detect vertebrae fractures, incorporating a Vision Transformer for spine detection and a Swin Transformer for fracture identification. This approach leverages the strengths of transformers in medical imaging to advance vertebral and fracture classification accuracy on 3D radiographic data.
 
+## Overview
 
-<img src="https://github.com/user-attachments/assets/5a074c7a-4cea-460d-bfdb-06523ac54dc7" width="50%" />
+### FracFormer Architecture
+The architecture consists of:
+1. **Vertebrae Network**: Predicts vertebra visibility labels (C1–C7).
+2. **Fracture Network**: Predicts fracture probabilities using pseudo-labels from the Vertebrae Network.
 
+<p align="center">
+  <img src="figures/figure_5_Overview of FracFormer.png" width="800">
+</p>
 
-![image](https://github.com/user-attachments/assets/b37d4a4f-c832-495e-ad3f-d19de4bb827a)
+### Components
+#### 1. Vertebrae Network
+- Uses Vision Transformers (ViT) for vertebra visibility prediction.
+<p align="center">
+  <img src="figures/figure_6_ Vertebrae Network with ViT .png" width="700">
+</p>
 
-## Testing the Model
+#### 2. Fracture Network
+- Employs Swin Transformers for detecting fractures.
+<p align="center">
+  <img src="figures/figure_9_Fracture Network with Swin Transformer.png" width="700">
+</p>
 
-To evaluate the performance of the FracFormer model on test data, you can use the `test.py` script. Follow the steps below:
+---
 
-### 1. Ensure Required Files and Directories
-- **Test Data**: Ensure the `./dataset/test.csv` file exists. This file should contain metadata about the test cases.
-- **Test Images**: Ensure the test DICOM images are located in the directory specified by `Config.TEST_IMAGES_PATH`.
-- **Checkpoints**: Ensure the model checkpoints are available in the directory specified by `Config.CHECKPOINTS_PATH`. Each model checkpoint file should match the names in `Config.MODEL_NAMES`.
+## Installation
 
-### 2. Run the `test.py` Script
-Use the following command to run the test script:
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/<username>/FracFormer.git
+   cd FracFormer
+   ```
 
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set up directories:
+   ```bash
+   mkdir dataset models figures utils
+   ```
+
+---
+
+## Dataset Preparation
+
+1. Download the dataset from the [RSNA Cervical Spine Fracture Detection](https://www.kaggle.com/competitions/rsna-2022-cervical-spine-fracture-detection/data).
+   Place the dataset into the `dataset` directory with the following structure:
+   ```
+   dataset/
+   ├── train_images/
+   ├── test_images/
+   ├── train.csv
+   ├── test.csv
+   ```
+
+2. Preprocess the dataset:
+   ```bash
+   python dataset/dataset.py
+   ```
+
+---
+
+## Training
+
+### 1. Train Vertebrae Network
+The first stage predicts vertebra visibility using Vision Transformers:
 ```bash
-python test.py
+python models/fracformer.py
 ```
+This step:
+- Trains the **VertebraeNet**.
+- Generates pseudo-labels for vertebra visibility (C1–C7).
 
-## Work in Progress 🚧
+### 2. Train Fracture Network
+The second stage detects fractures using Swin Transformers:
+```bash
+python models/fracformer.py
+```
+This step:
+- Trains the **FractureNet** using the Vertebrae Network predictions.
 
-This repository is currently under active development, with regular updates expected.
+---
+
+## Testing
+
+1. Ensure trained models are saved in the `models/checkpoints` directory:
+   ```
+   models/checkpoints/
+   ├── vertebraenet_fold0.tph
+   ├── vertebraenet_fold1.tph
+   ├── fracturenet_fold0.tph
+   ├── fracturenet_fold1.tph
+   ```
+
+2. Run the inference script:
+   ```bash
+   python test.py
+   ```
+
+3. Results:
+   - Generates predictions for fractures.
+   - Outputs classification reports and metrics like AUC-ROC.
+
+---
+
+## Figures
+
+### Vertebrae Network
+- Patch partition of input images:
+<p align="center">
+  <img src="figures/figure_7_Patch partition of Vertebrae Network.png" width="600">
+</p>
+
+### Fracture Network
+- Shifted-window mechanism of Swin Transformers:
+<p align="center">
+  <img src="figures/figure_10_Shifted-window mechanism of Fracture Network.png" width="700">
+</p>
+
+---
+
+## Acknowledgments
+
+This work builds upon the RSNA Cervical Spine Fracture Detection dataset and leverages cutting-edge Transformer architectures (ViT and Swin Transformers).
+
+---
+
