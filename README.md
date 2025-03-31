@@ -1,6 +1,6 @@
 # FracFormer: Semi-supervised Learning for Vertebrae and Fracture Classification on 3D Radiographs with Transformers
 
-This repository is the official implementation of FracFormer: Semi-supervised Learning for Vertebrae and Fracture Classification on 3D Radiographs with Transformers. Our framework applies transformer-based models to detect vertebrae fractures, incorporating a Vision Transformer for spine detection and a Swin Transformer for fracture identification. This approach leverages the strengths of transformers in medical imaging to advance vertebral and fracture classification accuracy on 3D radiographic data.
+This repository is the official implementation of FracFormer: Semi-supervised Learning for Vertebrae and Fracture Classification on 3D Radiographs with Transformers. Our framework applies transformer-based models to detect vertebrae fractures, incorporating a Vision Transformer for spine detection and a Swin Transformer for fracture identification. This approach leverages the strengths of transformers in medical imaging to advance vertebral and fracture classification accuracy on 3D radiographic data. The full thesis is available [here](https://dcollection.korea.ac.kr/srch/srchDetail/000000270509).
 
 ## Overview
 
